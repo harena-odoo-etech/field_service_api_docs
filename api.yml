@@ -1,0 +1,489 @@
+openapi: 3.0.3
+info:
+  title: Field Service API
+  version: 1.0.0
+  description: >-
+    This module exposes a REST API for interacting with Field Service tasks in
+    Odoo, including authentication, intervention listing, updating status,
+    and timesheet creation.
+    
+tags:
+  - name: Authentication
+    description: Tags for authentication root
+  - name: Interventions 
+    description: Tags for interventions root   
+paths:
+  /api/auth/login:
+    post:
+      summary: User login
+      operationId: Authentication
+      tags:
+        - Authentication
+      description: Authenticate user and retrieve an access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              example:
+                token: "eyJ0eXAiOiJKV..."
+        '401':
+          description: Invalid credentials
+
+  /api/auth/reset-password:
+    post:
+      summary: Reset password
+      operationId: resetPassword
+      tags:
+        - Authentication
+      description: Reset password using the email of an user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required:
+                - email
+      responses:
+        '200':
+          description: Success
+        '404':
+          description: User not found        
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      operationId: Logout
+      security:
+        - bearerAuth: []
+      description: Invalidate the current access token.
+      responses:
+        '200':
+          description: Logout successful
+        '401':
+          description: Unauthorized
+
+  /api/auth/verify-token:
+    get:
+      tags:
+        - Authentication
+      summary: Verify token
+      operationId: VerifyToken
+      security:
+        - bearerAuth: []
+      description: Verify the validity of the current token.
+      responses:
+        '200':
+          description: Token is valid
+        '401':
+          description: Invalid or expired token
+
+  /api/interventions/list:
+    get:
+      tags:
+        - Interventions
+      summary: List interventions
+      operationId: GetInterventionList
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: number
+            enum:
+              - 1
+              - 2
+              - 3
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum:
+              - "0"
+              - "1"
+      responses:
+        '200':
+          description: List of interventions
+          content:
+            application/json:
+              example:
+                - id: 1
+                  title: "Plumbing maintenance"
+                  dateStart: "2025-07-01"
+                  dateEnd: "2025-07-01"
+                  status: 2
+                  priority: "1"
+                  customer: "John Doe"
+                  distance: 10.5
+                  description: "Routine maintenance for plumbing system."
+                  long: 0.0
+                  lat: 0.0
+                  telephone: "123-456-7890"
+                  address: "123 Main St, City, Country"
+                  materials:
+                  - id: 1
+                    name: "Pipe"
+                    quantity: 5
+                  - id: 2
+                    name: "Faucet"
+                    quantity: 2
+                - id: 2
+                  title: "AC repair"
+                  dateStart: "2025-07-02"
+                  dateEnd: "2025-07-02"
+                  status: 3
+                  priority: "0"
+                  customer: "Jane Smith"
+                  distance: 5.0
+                  description: "Routine maintenance for plumbing system."
+                  long: 0.0
+                  lat: 0.0
+                  telephone: "123-456-7890"
+                  address: "123 Main St, City, Country"
+                  materials:
+                  - id: 1
+                    name: "Pipe"
+                    quantity: 5
+                  - id: 2
+                    name: "Faucet"
+                    quantity: 2
+
+  /api/interventions/{task_id}:
+    get:
+      tags:
+        - Interventions
+      summary: Get intervention details
+      operationId: GetInterventionById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: task_id
+          required: true
+          in: path
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              example:
+                id: 1
+                title: "Plumbing maintenance"
+                dateStart: "2025-07-01"
+                dateEnd: "2025-07-01"
+                status: 1
+                priority: "High"
+                customer: "John Doe"
+                distance: 10.5
+                description: "Routine maintenance for plumbing system."
+                long: 0.0
+                lat: 0.0
+                telephone: "123-456-7890"
+                address: "123 Main St, City, Country"
+                materials:
+                  - id: 1
+                    name: "Pipe"
+                    quantity: 5
+                  - id: 2
+                    name: "Faucet"
+                    quantity: 2
+        '404':
+          description: Task not found
+
+  /api/interventions/materials:
+    get:
+      tags:
+        - Interventions
+      summary: List materials
+      operationId: GetMaterials
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of materials
+          content:
+            application/json:
+              example:
+                - id: 1
+                  name: "Pipe"
+                  quantityAvailable: 100
+                - id: 2
+                  name: "Faucet"
+                  quantityAvailable: 50
+        '500':
+          description: Server error
+  /api/interventions/{intervention_id}/worksheet:
+    get: 
+      tags: 
+        -  Interventions
+      summary: Retrieve worksheet used for the current intervention
+      operationId: GetInterventionWorksheet
+      security: 
+        -  bearerAuth: []
+      parameters:
+        - name: intervention_id
+          required: true
+          in: path
+          schema:
+            type: integer
+      responses: 
+        '200':
+          description: Worksheet retrieved successfully
+          content: 
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/worksheetData"
+        '404':
+          description: Intervention not found
+      
+
+  /api/interventions/update-status:
+    put:
+      tags:
+        - Interventions
+      summary: Update intervention status
+      operationId: UpdateStatus
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statusId:
+                  type: integer
+                  enum:
+                    - 1
+                    - 2   
+                    - 3
+                interventionId:
+                  type: number
+              required:
+                - statusId
+                - interventionId
+      responses:
+        '200':
+          description: Status updated
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden
+        '404':
+          description: Task not found
+
+  /api/interventions/{task_id}/create-timesheet:
+    post:
+      tags:
+        - Interventions
+      summary: Create timesheet
+      operationId: CreateTimesheet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                timeAllocated:
+                  type: number
+                date:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Timesheet created
+          content:
+            application/json:
+              example:
+                message: "Timesheet entry created."
+                task_id: 1
+                unit_amount: 2.0
+                date: "2025-07-21"
+        '400':
+          description: Invalid data
+        '403':
+          description: Forbidden
+        '404':
+          description: Task not found
+
+  /api/interventions/sync:
+    post:
+      tags:
+        - Interventions
+      summary: Sync interventions
+      operationId: SyncInterventions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        $ref: '#/components/requestBodies/syncBody'
+
+      responses:
+        '200':
+          description: Sync successful
+          content:
+            application/json:
+              example:
+                message: "Sync completed successfully."
+        '403':
+          description: You can only sync your own tasks
+        '404':
+          description: Task not found        
+
+components:
+  requestBodies:
+    syncBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              tasks:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    status:
+                      type: integer
+                      enum:
+                        - 1
+                        - 2
+                        - 3
+                    timesheets:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Timesheet'
+                    comments:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/CommentsBody'
+                    images:
+                        $ref: '#/components/schemas/AttachmentFilesBody'
+                    materials:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/MaterialsBody'    
+                    documents:
+                        $ref: '#/components/schemas/AttachmentFilesBody'
+                    signature:
+                        $ref: '#/components/schemas/attachmentFiles'
+
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    worksheetData:
+      type: object
+      properties: 
+        data:
+          type: object
+          properties: 
+            template_id:
+              type: integer
+              example: 1
+            template_name:
+              type: string
+            model_name:
+              type: string
+            fields:
+              type: array
+              items: 
+                type: object
+                properties: 
+                  technical_name:
+                    type: string
+                  label:
+                    type: string
+                  type:
+                    type: string
+                  required:
+                    type: boolean
+                  readonly:
+                    type: boolean
+                  options:
+                    type: array
+                    items: 
+                      type: object
+    attachmentFiles:
+      type: object
+      properties:
+        filename:
+          type: string
+        data:
+          type: string
+          format: base64
+    Timesheet:
+      type: object
+      properties:
+        description:
+          type: string
+        timeAllocated:
+          type: number
+        date:
+          type: string
+          format: date
+    AttachmentFilesBody:
+      type: array
+      items:
+        $ref: '#/components/schemas/attachmentFiles'
+    CommentsBody:
+      type: object
+      properties:
+        message:
+          type: string
+        dateCreated:
+          type: string
+          format: date-time
+        attachmentFiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/attachmentFiles'
+    MaterialsBody:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: number        
