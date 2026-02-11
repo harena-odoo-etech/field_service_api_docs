@@ -234,29 +234,23 @@ paths:
                   quantityAvailable: 50
         '500':
           description: Server error
-  /api/interventions/{intervention_id}/worksheet:
+  /api/interventions/worksheets:
     get: 
       tags: 
         -  Interventions
-      summary: Retrieve worksheet used for the current intervention
-      operationId: GetInterventionWorksheet
+      summary: Retrieve User intervention worksheets
+      operationId: GetInterventionWorksheets
       security: 
         -  bearerAuth: []
-      parameters:
-        - name: intervention_id
-          required: true
-          in: path
-          schema:
-            type: integer
       responses: 
         '200':
-          description: Worksheet retrieved successfully
+          description: Worksheets retrieved successfully
           content: 
             application/json:
               schema: 
                 $ref: "#/components/schemas/worksheetData"
         '404':
-          description: Intervention not found
+          description: No worksheets found for this user
       
 
   /api/interventions/update-status:
@@ -416,34 +410,40 @@ components:
       type: object
       properties: 
         data:
-          type: object
-          properties: 
-            template_id:
-              type: integer
-              example: 1
-            template_name:
-              type: string
-            model_name:
-              type: string
-            fields:
-              type: array
-              items: 
-                type: object
-                properties: 
-                  technical_name:
-                    type: string
-                  label:
-                    type: string
-                  type:
-                    type: string
-                  required:
-                    type: boolean
-                  readonly:
-                    type: boolean
-                  options:
-                    type: array
-                    items: 
-                      type: object
+          type: array
+          items:
+            type: object
+            properties: 
+              template_id:
+                type: integer
+                example: 1
+              template_name:
+                type: string
+              model_name:
+                type: string
+              intervention_ids:
+                type: array
+                items: 
+                  type: integer
+              fields:
+                type: array
+                items: 
+                  type: object
+                  properties: 
+                    technical_name:
+                      type: string
+                    label:
+                      type: string
+                    type:
+                      type: string
+                    required:
+                      type: boolean
+                    readonly:
+                      type: boolean
+                    options:
+                      type: array
+                      items: 
+                        type: object
     attachmentFiles:
       type: object
       properties:
