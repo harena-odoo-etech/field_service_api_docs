@@ -40,7 +40,11 @@ paths:
           content:
             application/json:
               example:
+                userId: 2
+                email: "admin@gmail.com"
+                name: "admin"
                 token: "eyJ0eXAiOiJKV..."
+                lang: "fr_Fr"
         '401':
           description: Invalid credentials
 
@@ -487,3 +491,4 @@ components:
           type: string
         quantity:
           type: number        
+
