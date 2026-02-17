@@ -360,7 +360,33 @@ paths:
         '403':
           description: You can only sync your own tasks
         '404':
-          description: Task not found        
+          description: Task not found    
+  /api/interventions/worksheets/save:
+    post: 
+      tags: 
+        -  Interventions
+      summary: Sync worksheets
+      operationId: SyncWorksheets
+      security: 
+        - bearerAuth: []
+      requestBody: 
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: "#/components/schemas/worksheetsBody"
+      responses: 
+        '200':
+          description: Worksheet synced successfully
+          content:
+            application/json:
+              example:
+                message: "Sync completed successfully."
+        '403':
+          description: You can only sync your own tasks
+        '404':
+          description: Task not found   
+          
 
 components:
   requestBodies:
@@ -418,14 +444,14 @@ components:
           items:
             type: object
             properties: 
-              template_id:
+              id:
                 type: integer
                 example: 1
-              template_name:
+              templateName:
                 type: string
-              model_name:
+              modelName:
                 type: string
-              intervention_ids:
+              interventionIds:
                 type: array
                 items: 
                   type: integer
@@ -434,7 +460,7 @@ components:
                 items: 
                   type: object
                   properties: 
-                    technical_name:
+                    technicalName:
                       type: string
                     label:
                       type: string
@@ -490,5 +516,18 @@ components:
         name:
           type: string
         quantity:
-          type: number        
+          type: number  
 
+    worksheetsBody:
+      type: object
+      properties: 
+        data:
+          type: array
+          items: 
+            type: object
+            properties:
+              interventionId:
+                type: integer
+              values:
+                type: object
+                description: Here we put the technical name of fields and their values
